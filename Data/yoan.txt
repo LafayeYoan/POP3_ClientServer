@@ -1,0 +1,28 @@
+From: Sacha <sacha@machine.example>
+To: Yoan <yoan@machine.example>
+Subject: Re:???
+Date: Sat, 22 Nov 1997 11:55:06 -0600
+Message-ID: <4@local.machine.example>
+
+Hey ! 
+Sorry about that, I was busy.
+Would you like to take a lunch today ?
+.
+From: Sacha <sacha@machine.example>
+To: Yoan <yoan@machine.example>
+Subject: Re:???
+Date: Sat, 22 Nov 1997 16:55:06 -0600
+Message-ID: <5@local.machine.example>
+
+Forget about today's lunch. 
+See you monday instead ?
+XOXOXO
+.
+From: Sacha <sacha@machine.example>
+To: Yoan <yoan@machine.example>
+Subject: Re::)
+Date: Sun, 23 Nov 1997 10:55:06 -0600
+Message-ID: <6@local.machine.example>
+
+^^
+.

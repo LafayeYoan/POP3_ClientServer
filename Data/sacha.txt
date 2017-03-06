@@ -1,0 +1,29 @@
+From: Yoan <yoan@machine.example>
+To: Sacha <sacha@machine.example>
+Subject: Saying Hello
+Date: Fri, 21 Nov 1997 09:55:06 -0600
+Message-ID: <1@local.machine.example>
+
+This is a message just to say hello.
+So, "Hello".
+.
+From: Yoan <yoan@machine.example>
+To: Sacha <sacha@machine.example>
+Subject: ???
+Date: Sat, 22 Nov 1997 09:55:06 -0600
+Message-ID: <2@local.machine.example>
+
+You did not respond to my previous email.
+Are you alive ?
+???
+.
+From: Yoan <yoan@machine.example>
+To: Sacha <sacha@machine.example>
+Subject: :)
+Date: Sun, 23 Nov 1997 09:55:06 -0600
+Message-ID: <3@local.machine.example>
+
+All right ! 
+See you later then :) !
+XOXOXO.
+.
