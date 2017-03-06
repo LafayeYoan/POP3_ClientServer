@@ -56,10 +56,25 @@ public class ServerThread implements Runnable{
         }
         boolean exit = false;
         while(!exit){
-            Message message = Message.readMessage(input);
+            Message messageReceived = Message.readMessage(input);
             
-            switch (message.command){
+            Message messageToSend;
+            switch (messageReceived.command){
                 case APOP:
+                    switch (etat){
+                        case AUTHORIZATION:
+                            messageToSend = new Message(OK,null);
+                            messageToSend.sendMessage(output);
+                            //change server state
+                            etat = ServerEtat.TRANSACTION;
+                            break;
+                        default:
+                            messageToSend = new Message(ERR,"Le serveur est deja connecté");
+                            messageToSend.sendMessage(output);
+                            
+                    }
+                    //verification de la chaine de securité
+                    //pas de verification, return ok
                     
                     break;
                 case STAT:
@@ -67,8 +82,28 @@ public class ServerThread implements Runnable{
                 case RETR:
                     break;
                 case QUIT:
+                    //mise a jour du cache et arret du socket
+                    try {
+                        socket.close();
+                    } catch (IOException ex) {
+                        Logger.getLogger(ServerThread.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+
                     break;
                 default:
+                    switch(etat){
+                        case AUTHORIZATION:
+                            messageToSend = new Message(ERR, "Le serveur attend une commande APOP.");
+                            break;
+                            
+                        case TRANSACTION:
+                            messageToSend = new Message(ERR, "Le serveur attend une commande STAT, RETR ou QUIT.");
+                            break;
+                        
+                        default:
+                            messageToSend = new Message(ERR, "Message non géré");
+                    }
+                    messageToSend.sendMessage(output);
                     System.out.println("message non géré");
             }
         }

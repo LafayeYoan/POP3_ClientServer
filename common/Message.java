@@ -7,6 +7,7 @@ package POP3_ClientServer.common;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.logging.Level;
@@ -66,5 +67,24 @@ public class Message {
         String [] args = splitedMessage.length>1 ? Arrays.copyOfRange(splitedMessage, 1, splitedMessage.length) : null;
         
         return new Message(command,args);
+    }
+    
+    public  void sendMessage(OutputStream output){
+        String sMessage = this.command;
+        if(this.args!=null){
+            for (int i=0; i< this.args.length; i++ ){
+                sMessage += " "+ this.args[i];
+            }
+        }
+        
+        sMessage += "\r\n";
+        
+        try {
+            output.write(sMessage.getBytes());
+            output.flush();
+        } catch (IOException ex) {
+            Logger.getLogger(Message.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
     }
 }
