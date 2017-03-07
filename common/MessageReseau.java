@@ -9,25 +9,24 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
+ * Gère la communication Réseau Client-Serveur
  * @author lafay
  */
-public class Message {
+public class MessageReseau {
     public String command;
     public String args[];
     
 
-    public Message(String command, String ... args){
+    public MessageReseau(String command, String ... args){
         this.command = command;
         this.args = args;
     }
     
-    public static Message readMessage(InputStream input){
+    public static MessageReseau readMessage(InputStream input){
         
         int byteRead = 0;
         StringBuilder sb = new StringBuilder();
@@ -37,7 +36,7 @@ public class Message {
             try {
                 byteRead = input.read();
             } catch (IOException ex) {
-                Logger.getLogger(Message.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(MessageReseau.class.getName()).log(Level.SEVERE, null, ex);
             }
             
             if(byteRead == -1){
@@ -53,20 +52,11 @@ public class Message {
             }
         }
         
-        // convert datas to byteArray
-//        byte [] byteDatas = new byte[datas.size()];
-//        for(int i=0; i< byteDatas.length; i++){
-//            byteDatas[i] = datas.get(i).byteValue();
-//        }
-        // split datas
-        
-        System.out.println(sb.toString());
-        
         String [] splitedMessage = sb.toString().replaceAll("\r\n","").split(" ");
         String command = splitedMessage[0];
         String [] args = splitedMessage.length>1 ? Arrays.copyOfRange(splitedMessage, 1, splitedMessage.length) : null;
         
-        return new Message(command,args);
+        return new MessageReseau(command,args);
     }
     
     public  void sendMessage(OutputStream output){
@@ -83,7 +73,7 @@ public class Message {
             output.write(sMessage.getBytes());
             output.flush();
         } catch (IOException ex) {
-            Logger.getLogger(Message.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(MessageReseau.class.getName()).log(Level.SEVERE, null, ex);
         }
         
     }

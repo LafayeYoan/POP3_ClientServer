@@ -5,7 +5,9 @@
  */
 package POP3_ClientServer.Server;
 
-import POP3_ClientServer.common.Message;
+import POP3_ClientServer.common.EMail;
+import POP3_ClientServer.common.MailFileManager;
+import POP3_ClientServer.common.MessageReseau;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -32,6 +34,10 @@ public class ServerThread implements Runnable{
     private static final String OK = "+OK ";
     private static final String ERR = "-ERR ";
     private static final String ENDLINE = "\r\n";
+    
+    private String user;
+    MailFileManager userManager;
+    
     public ServerThread (Socket socket){
         try {
             this.socket = socket;
@@ -56,30 +62,60 @@ public class ServerThread implements Runnable{
         }
         boolean exit = false;
         while(!exit){
-            Message messageReceived = Message.readMessage(input);
+            MessageReseau messageReceived = MessageReseau.readMessage(input);
             
-            Message messageToSend;
+            MessageReseau messageToSend;
             switch (messageReceived.command){
+                
                 case APOP:
-                    switch (etat){
-                        case AUTHORIZATION:
-                            messageToSend = new Message(OK,null);
+                    if( etat == ServerEtat.AUTHORIZATION){
+                        if(messageReceived.args==null){
+                            messageToSend = new MessageReseau(ERR,"Aucun utilisateur reçu, le format de la commande est 'APOP utilisateur'");
                             messageToSend.sendMessage(output);
-                            //change server state
-                            etat = ServerEtat.TRANSACTION;
                             break;
-                        default:
-                            messageToSend = new Message(ERR,"Le serveur est deja connecté");
-                            messageToSend.sendMessage(output);
-                            
+                        }
+                        user = messageReceived.args[0];
+                        messageToSend = new MessageReseau(OK,"L'utilisateur '"+user+"' s'est connecté.");
+                        messageToSend.sendMessage(output);
+                        userManager = new MailFileManager(user);
+                        //change server state
+                        etat = ServerEtat.TRANSACTION;
+                        break;
                     }
-                    //verification de la chaine de securité
-                    //pas de verification, return ok
                     
+                    messageToSend = new MessageReseau(ERR,"Le serveur est deja connecté");
+                    messageToSend.sendMessage(output);
+                    //verification de la chaine de securité
+                    //pas de verification, return ok                    
                     break;
+                    
                 case STAT:
+                    if(etat == ServerEtat.TRANSACTION){
+                        messageToSend = new MessageReseau(OK,userManager.getNbMailsNotDeleted()+"", userManager.getSizeDepot()+"");
+                        messageToSend.sendMessage(output);
+                        break;
+                    }
+                    messageToSend = new MessageReseau(ERR,"Action impossible dans cet etat");
+                    messageToSend.sendMessage(output);
                     break;
+                    
                 case RETR:
+                    if(etat == ServerEtat.TRANSACTION){
+                        if(messageReceived.args == null){
+                            messageToSend=new MessageReseau(ERR,"Aucun parametres detectés");
+                            messageToSend.sendMessage(output);
+                            break;
+                        }
+                        EMail email = userManager.getMessage(Integer.parseInt(messageReceived.args[0]));
+                        
+                        messageToSend=new MessageReseau(OK,email.getSize()+"");
+                        messageToSend.sendMessage(output);
+                        messageToSend=new MessageReseau("",email.getEmailToSend()+"");
+                        messageToSend.sendMessage(output);
+                        messageToSend=new MessageReseau(".",null);
+                        messageToSend.sendMessage(output);
+                        break;
+                    }
                     break;
                 case QUIT:
                     //mise a jour du cache et arret du socket
@@ -93,15 +129,15 @@ public class ServerThread implements Runnable{
                 default:
                     switch(etat){
                         case AUTHORIZATION:
-                            messageToSend = new Message(ERR, "Le serveur attend une commande APOP.");
+                            messageToSend = new MessageReseau(ERR, "Le serveur attend une commande APOP.");
                             break;
                             
                         case TRANSACTION:
-                            messageToSend = new Message(ERR, "Le serveur attend une commande STAT, RETR ou QUIT.");
+                            messageToSend = new MessageReseau(ERR, "Le serveur attend une commande STAT, RETR ou QUIT.");
                             break;
                         
                         default:
-                            messageToSend = new Message(ERR, "Message non géré");
+                            messageToSend = new MessageReseau(ERR, "Message non géré");
                     }
                     messageToSend.sendMessage(output);
                     System.out.println("message non géré");
