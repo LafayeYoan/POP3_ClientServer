@@ -85,6 +85,8 @@ public class EMail {
     
     String body;
     
+    String toString;
+    
     boolean delete;
     int size;
         
@@ -104,7 +106,11 @@ public class EMail {
     
     public String getEmailToSend(){
         StringBuilder str = new StringBuilder();
-        
+        str.append("From:"+this.from+"\r\n");
+        str.append("To:"+this.to+"\r\n");
+        str.append("Subject:"+this.subject+"\r\n");
+        str.append("Message-ID:"+this.message_id+"\r\n");
+        str.append(this.body+"\r\n");
         return str.toString();
     }
     

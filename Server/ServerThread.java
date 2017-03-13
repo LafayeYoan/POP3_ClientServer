@@ -75,9 +75,17 @@ public class ServerThread implements Runnable{
                             break;
                         }
                         user = messageReceived.args[0];
+                        
+                        userManager = new MailFileManager(user);
+                        if(!userManager.userExist()){
+                            messageToSend = new MessageReseau(ERR,"Utilisateur invalide");
+                            messageToSend.sendMessage(output);
+                            break;
+                        }
+                        
                         messageToSend = new MessageReseau(OK,"L'utilisateur '"+user+"' s'est connecté.");
                         messageToSend.sendMessage(output);
-                        userManager = new MailFileManager(user);
+                        
                         //change server state
                         etat = ServerEtat.TRANSACTION;
                         break;
@@ -106,7 +114,26 @@ public class ServerThread implements Runnable{
                             messageToSend.sendMessage(output);
                             break;
                         }
-                        EMail email = userManager.getMessage(Integer.parseInt(messageReceived.args[0]));
+                        int messageNumber;
+                        try{
+                            messageNumber = Integer.parseInt(messageReceived.args[0]);
+                        }catch(Exception e){
+                            messageToSend=new MessageReseau(ERR,"Le numéro du message doit etre un nombre");
+                            messageToSend.sendMessage(output);
+                            break;
+                        }
+                        
+                        if(messageNumber <1 ){
+                            messageToSend=new MessageReseau(ERR,"Le numéro du message doit etre >= 1");
+                            messageToSend.sendMessage(output);
+                            break;
+                        }
+                        if(messageNumber >userManager.getNbMailsNotDeleted() ){
+                            messageToSend=new MessageReseau(ERR,"Le message avec ce numéro n'éxiste pas.");
+                            messageToSend.sendMessage(output);
+                            break;
+                        }
+                        EMail email = userManager.getMessage(messageNumber);
                         
                         messageToSend=new MessageReseau(OK,email.getSize()+"");
                         messageToSend.sendMessage(output);
@@ -116,11 +143,16 @@ public class ServerThread implements Runnable{
                         messageToSend.sendMessage(output);
                         break;
                     }
+                    messageToSend = new MessageReseau(ERR,"Action impossible dans cet etat");
+                    messageToSend.sendMessage(output);
                     break;
                 case QUIT:
                     //mise a jour du cache et arret du socket
                     try {
+                        messageToSend=new MessageReseau(OK,"Fermeture OK");
+                        messageToSend.sendMessage(output);
                         socket.close();
+                        exit = true;
                     } catch (IOException ex) {
                         Logger.getLogger(ServerThread.class.getName()).log(Level.SEVERE, null, ex);
                     }

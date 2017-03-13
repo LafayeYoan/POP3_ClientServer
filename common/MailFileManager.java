@@ -20,21 +20,22 @@ import java.util.logging.Logger;
  */
 public class MailFileManager {
     
-    public static String sourceMailFolder = "..\\Data"; //à vérifier
+    public static String sourceMailFolder = "src\\POP3_ClientServer\\Data"; //à vérifier
     List<EMail> userMail;
     
     public MailFileManager(String user){
         userMail = this.getUserEMail(user);
     }
     
-    
+    public boolean userExist(){
+        return userMail !=null;
+    }
     /***
      * Lecture du fichier de l'utilisateur
      * @param user
      * @return 
      */
-    private static List<EMail> getUserEMail(String user){
-        
+    private List<EMail> getUserEMail(String user){
         ArrayList<EMail> emails = new ArrayList<EMail>();
         File f = new File(sourceMailFolder + "\\" + user + ".txt");
         int byteRead = 0;
@@ -61,17 +62,35 @@ public class MailFileManager {
                 String [] splitedMessages = sb.toString().split("\r\n.\r\n");
                 
                 for(int i = 0; i < splitedMessages.length; i++) {
-                    //todo
+                    // public EMail(String from, String to, String subject, Date date, String message_id, String body, int size)
+                    
+                    String [] splitedMessage = splitedMessages[i].split("\r\n\r\n");
+                    
+                    String [] splitedHeader = splitedMessage[0].split("\r\n");
+                    String from = getValue("From",splitedHeader);
+                    String to = getValue("To",splitedHeader);
+                    String subject = getValue("Subject",splitedHeader);
+                    String date = getValue("Date",splitedHeader);
+                    String message_id = getValue("Message-ID",splitedHeader);
+                    String body = splitedMessage[1];
+                    
+                    
+                    EMail aMail = new EMail(from, to, subject, new java.util.Date(date), message_id, body, splitedMessages[i].length());
+                    emails.add(aMail);
+                    
+                    
                 }
+                fReader.close();
+
             } else {
-                //Création
-                //todo
+                //Fichier user non valide
+                        return null;
             }
         } catch(Exception e) {
             System.err.println("Impossible d'ouvrir le fichier associé : " + e.getMessage());
         }
         
-        return null;
+        return emails;
     }
     
     public List<EMail> getEmails(){
@@ -107,5 +126,30 @@ public class MailFileManager {
         }
         return this.getNotDeletedMail().get(number-1);
         
+    }
+    
+    /**
+     * REturn the value after the given key
+     * ex: datas = [From: blalbla,To: toto]
+     * getValue("From", datas) return blalbla
+     * @param key
+     * @param datas
+     * @return 
+     */
+    private static String getValue(String key, String [] datas){
+        String val = "";
+        if(key == null){
+            //return body
+            
+            return "";
+        }
+        for(int i = 0 ; i< datas.length; i++){
+            if(datas[i].startsWith(key)){
+                //return the second part of the string 
+                return datas[i].substring(datas[i].indexOf(":")+1);
+            }
+        }
+        
+        return val;
     }
 }
