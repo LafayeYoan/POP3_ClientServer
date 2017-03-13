@@ -27,4 +27,11 @@ A Server and a Client POP3 made in IPC lecture at Polytech
 - Live demo
 - Programming report
 
+## Installation
+
+- Create a new Java project on your IDE (Netbeans, IntelliJ, ...)
+- In your src directory, create a POP3_ClientServer package
+- Download the sources inside your src/POP3_ClientServer package
+- Run the server app and test it with Putty or Telnet (port 5555)
+
 ### Made by Yoan LAFAYE DE MICHEAUX & Sacha LHOPITAL
