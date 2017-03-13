@@ -34,4 +34,4 @@ A Server and a Client POP3 made in IPC lecture at Polytech
 - Download the sources inside your src/POP3_ClientServer package
 - Run the server app and test it with Putty or Telnet (port 5555)
 
-### Made by Yoan LAFAYE DE MICHEAUX & Sacha LHOPITAL
+### Made by Yoan LAFAYE DE MICHEAUX & Sacha LHOPITAL (in pair programming)
