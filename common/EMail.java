@@ -5,7 +5,11 @@
  */
 package POP3_ClientServer.common;
 
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+
 import java.util.Date;
+import java.util.Observable;
 
 /**
  *
@@ -13,10 +17,12 @@ import java.util.Date;
  */
 public class EMail {
 
+    /*****************************************
+     * GETTERS & SETTERS
+     **************************************************/
     public String getFrom() {
         return from;
     }
-
     public void setFrom(String from) {
         this.from = from;
     }
@@ -24,7 +30,6 @@ public class EMail {
     public String getTo() {
         return to;
     }
-
     public void setTo(String to) {
         this.to = to;
     }
@@ -32,7 +37,6 @@ public class EMail {
     public String getSubject() {
         return subject;
     }
-
     public void setSubject(String subject) {
         this.subject = subject;
     }
@@ -40,7 +44,6 @@ public class EMail {
     public Date getDate() {
         return date;
     }
-
     public void setDate(Date date) {
         this.date = date;
     }
@@ -48,7 +51,6 @@ public class EMail {
     public String getMessage_id() {
         return message_id;
     }
-
     public void setMessage_id(String message_id) {
         this.message_id = message_id;
     }
@@ -56,7 +58,6 @@ public class EMail {
     public String getBody() {
         return body;
     }
-
     public void setBody(String body) {
         this.body = body;
     }
@@ -64,7 +65,6 @@ public class EMail {
     public boolean isDelete() {
         return delete;
     }
-
     public void setDelete(boolean delete) {
         this.delete = delete;
     }
@@ -72,11 +72,16 @@ public class EMail {
     public int getSize() {
         return size;
     }
-
     public void setSize(int size) {
         this.size = size;
     }
-    
+
+    /*****************************************
+     * PROPERTY GETTERS
+     **************************************************/
+    public StringProperty getFromProperty() { return new SimpleStringProperty(getFrom()); }
+    public StringProperty getObjetProperty() { return new SimpleStringProperty(getSubject()); }
+
     String from;
     String to;
     String subject;
