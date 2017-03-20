@@ -1,13 +1,9 @@
 package POP3_ClientServer.Client;
 
 import POP3_ClientServer.common.EMail;
-import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.util.Callback;
-
-import java.util.Observer;
 
 /**
  *
@@ -16,6 +12,7 @@ import java.util.Observer;
 public class MailsOverview {
 
     private ClientApp mainApp;
+    private String clientName;
 
     @FXML
     private TableView<EMail> mailsTable;
@@ -38,6 +35,10 @@ public class MailsOverview {
     */
 
     public MailsOverview() {}
+
+    public void setClientName(String n) {
+        this.clientName = n;
+    }
 
     /**
      * Initializes the controller class. This method is automatically called
