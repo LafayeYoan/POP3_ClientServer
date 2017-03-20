@@ -78,4 +78,12 @@ public class MessageReseau {
         
     }
     
+    public String toString() {
+        StringBuilder sb = new StringBuilder(this.command + " ");
+        for (String s : args) {
+            sb.append(s + " ");
+        }
+        return sb.toString();
+    }
+    
 }

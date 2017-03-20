@@ -11,7 +11,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -19,7 +22,7 @@ import java.util.logging.Logger;
  *
  * @author lafay
  */
-public class Client {
+public class Client implements Runnable{
     
     Socket socket;
     InputStream input;
@@ -29,23 +32,24 @@ public class Client {
     ClientEtat etat;
     
     ClientCommandes lastCommand;
-
+    
+    Scanner sc;
+    
     String user;
     String pass;
+
     boolean exit = false;
-    boolean awnserWaited = true;
     
-    LinkedList <MessageReseau> waitingCommands = new LinkedList<>();
 
     
     public static final String OK = "+OK";
     public static final String ERR = "-ERR";
     
-    public Client(String adress, int port, String user, String pass){
-        this.user = user;
-        this.pass = pass;
+    public Client(String adress, int port){
+
         lastCommand = ClientCommandes.EMPTY;
         
+        sc = new Scanner (System.in);
         try {
             socket = new Socket(adress, port);
 
@@ -56,22 +60,24 @@ public class Client {
         }
         
         etat = ClientEtat.ATTENTE;
-        this.run();
     }
     
-    private void run(){
+    public synchronized void run(){
         
         
         while(!exit){
-            if(awnserWaited){
-
-                MessageReseau message  = MessageReseau.readMessage(input);
             
-                awnserWaited = false;
+            //attete de la reponse associée            
+            System.out.println("en attente du serveur...");
+            MessageReseau message  = MessageReseau.readMessage(input);
+            System.out.println("[réponse du serveur reçue]:" + message);
+            
             switch (message.command){
+
                 case OK:
-                    
+
                     switch (etat){
+                        
                         case CLOSED:
                             switch(lastCommand){
                                 case QUIT:
@@ -80,9 +86,9 @@ public class Client {
                                 default:
                                      etat = ClientEtat.ATTENTE;
                             }                      
-                           
+
                             break;
-                            
+
                         case ATTENTE:
                             switch(lastCommand){
                                 case QUIT:
@@ -90,23 +96,27 @@ public class Client {
                                     break;
                                 default:
                                     etat = ClientEtat.ACTIF;
-                            
+                                    
+                                    System.out.println("Saisir votre nom utilisateur");
+
                                     //envoi APOP
+                                    this.user = sc.nextLine();
                                     MessageReseau toSend= new MessageReseau("APOP",user);
                                     toSend.sendMessage(output);
-                                    awnserWaited = true;
                                     lastCommand = ClientCommandes.APOP;
                             }          
-                            
+
                             break;
-                            
+
                         case ACTIF:
-                            
+
                             etat = ClientEtat.CONNECTED;
-                            
-                            
+                            sendUserMessage();
+                            break;
+
+
                         case CONNECTED:
-                            
+
                             switch(lastCommand){
                                 case STAT:
                                     this.handleStat(message);
@@ -118,22 +128,24 @@ public class Client {
                                     this.handleQuit(message);
                                     break;
                             }
-                                 
+                            
+                            sendUserMessage();
+
                             break;
                     }
                     break;
-                    
+
                 case ERR:
                     MessageReseau messageToSend;
 
                     switch (etat){
 
                         case CLOSED:
-                            System.out.println(message.args);
+                            System.out.println(message);
                             break;
 
                         case ATTENTE:
-                            System.out.println(message.args);
+                            System.out.println(message);
                             System.out.println("[Fermeture de la connection...]");
                             etat = ClientEtat.CLOSED;
                             messageToSend = new MessageReseau("QUIT");
@@ -142,7 +154,7 @@ public class Client {
                             break;
 
                         case ACTIF:
-                            System.out.println(message.args);
+                            System.out.println(message);
                             System.out.println("[Nouvelle tentative...]");
                             messageToSend = new MessageReseau("APOP", this.user);
                             messageToSend.sendMessage(output);
@@ -150,63 +162,39 @@ public class Client {
                             break;
 
                         case CONNECTED:
-                            System.out.println(message.args);
+                            System.out.println(message);
+                            
+                            sendUserMessage();
                             break;
 
                         default:
-                            System.out.println("Erreur non prise en compte : " + message.args);
+                            System.out.println("Erreur non prise en compte : " + message);
                     }
                     break;
-                    
+
                 default:
                     System.out.println("message inconu");
             }
-            
-
-            //message OK envoi suite
-            if(waitingCommands.isEmpty()){
-                break;
-            }
-            waitingCommands.getFirst().sendMessage(output);
-            switch(waitingCommands.getFirst().command){
-                case "APOP":
-                    lastCommand = ClientCommandes.APOP;
-                    break;
-                case "RETR":
-                    lastCommand = ClientCommandes.RETR;
-                    break;
-                case "STAT":
-                    lastCommand = ClientCommandes.STAT;
-                    break;
-                case "QUIT":
-                    lastCommand = ClientCommandes.QUIT;
-                    break;
-                    
-            }
-            waitingCommands.removeFirst();
-            awnserWaited = true;
-            break;
-                    
-                    
-                    
-                    
-                
-            }
-            
         }
-        
-        
-    }
-    public void addRetr(int numMessage){
-        waitingCommands.add(new MessageReseau("RETR", numMessage+""));
     }
     
-    public void addStat(){
-         waitingCommands.add(new MessageReseau("STAT"));
-    }
-    
-
-    
+   private void sendUserMessage(){
+       System.out.println("Commande:");
+       
+       String[] splitedmess = sc.nextLine().split(" ");
+       
+       String comm = splitedmess[0];
+       
+       String[]param = new String [splitedmess.length-1];
+       for (int i = 1; i< splitedmess.length; i++){
+           param[i-1] = splitedmess[i];
+       }
+       
+       MessageReseau mess = new MessageReseau(comm,param);
+       mess.sendMessage(output);
+       
+       lastCommand = ClientCommandes.getValue(comm);       
+   }
     
     private void handleQuit(MessageReseau message){
         try {
@@ -219,14 +207,15 @@ public class Client {
     }
     
     private void handleRetr(MessageReseau message){
-        System.out.println("OK RETR reçu:"+message.args);
+        System.out.println(message);
     }
     
     private void handleStat(MessageReseau message){
-        System.out.println("OK STAT reçu:"+message.args);
+        System.out.println(message);
     }
     
-    
-    
-    
+    public static void main(String [] args){
+        Client c = new Client("localhost", 5555);
+        c.run();
+    }   
 }

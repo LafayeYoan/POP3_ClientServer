@@ -22,11 +22,12 @@ import java.util.Scanner;
 public class ClientApp {
 
     public static void main(String[] args) {
-        System.out.println("Saisissez votre nom d'utilisateur : \n");
-        Scanner sc = new Scanner(System.in);
-        String name = sc.nextLine();
 
-        Client c = new Client("localhost", 5555, name, null);
+        Client c = new Client("localhost", 5555);
+        Thread clientThread =  new Thread(c);
+        clientThread.start();
+        
+        
     }
 
     /*private Stage primaryStage;

@@ -9,6 +9,29 @@ public enum ClientCommandes {
     STAT,
     RETR,
     APOP,
-    QUIT
+    QUIT;
+    
+    public static ClientCommandes getValue(String in){
+        
+        if(in.equals(STAT.toString())) {
+            return STAT;
+        }
+        
+        if(in.equals(RETR.toString())) {
+            return RETR;
+        }
+        
+        if(in.equals(APOP.toString())) {
+            return APOP;
+        }
+        
+        if(in.equals(QUIT.toString())) {
+            return QUIT;
+        }
+        
+        return EMPTY;
+    }
 
 }
+
+
