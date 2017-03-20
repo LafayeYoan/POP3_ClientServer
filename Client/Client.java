@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,12 +27,20 @@ public class Client {
     
     ClientEtat etat;
     
-    String lastCommand;
+    ClientCommandes lastCommand;
+    String user;
+    String pass;
+    boolean exit = false;
+    boolean awnserWaited = true;
+    
+    LinkedList <MessageReseau> waitingCommands = new LinkedList<>();
     
     public static final String OK = "+OK";
     public static final String ERR = "-ERR";
     
-    public Client(String adress, int port){
+    public Client(String adress, int port, String user, String pass){
+        this.user = user;
+        this.pass = pass;
         
         try {
             socket = new Socket(adress, port);
@@ -42,15 +51,16 @@ public class Client {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        etat = ClientEtat.CLOSED;
+        etat = ClientEtat.ATTENTE;
         this.run();
     }
     
     private void run(){
-        boolean exit = false;
+        
         
         while(!exit){
-            MessageReseau message  = MessageReseau.readMessage(input);
+            if(awnserWaited){
+                MessageReseau message  = MessageReseau.readMessage(input);
             
             
             switch (message.command){
@@ -58,31 +68,53 @@ public class Client {
                     
                     switch (etat){
                         case CLOSED:
-                            etat = ClientEtat.ATTENTE;
+                            switch(lastCommand){
+                                case QUIT:
+                                    handleQuit();
+                                    break;
+                                default:
+                                     etat = ClientEtat.ATTENTE;
+                            }                      
+                           
                             break;
                             
                         case ATTENTE:
-                            etat = ClientEtat.ACTIF;
+                            switch(lastCommand){
+                                case QUIT:
+                                    handleQuit();
+                                    break;
+                                default:
+                                    etat = ClientEtat.ACTIF;
                             
-                            //envoi APOP
+                                    //envoi APOP
+                                    MessageReseau toSend= new MessageReseau("APOP",user);
+                                    toSend.sendMessage(output);
+                                    lastCommand = ClientCommandes.QUIT;
+                            }          
+                            
                             break;
                             
                         case ACTIF:
                             
                             etat = ClientEtat.CONNECTED;
-                            break;
+                            
                             
                         case CONNECTED:
                             
-                            
-                            //action en fonction de la derniere comande envoiyée
-                            
-                            
-                            
+                            switch(lastCommand){
+                                case STAT:
+                                    this.handleStat();
+                                    break;
+                                case RETR:
+                                    this.handleRetr();
+                                    break;
+                                case QUIT:                                    
+                                    this.handleQuit();
+                                    break;
+                            }
+                                 
                             break;
                     }
-                    
-                    
                     break;
                     
                 case ERR:
@@ -92,9 +124,45 @@ public class Client {
                     System.out.println("message inconu");
             }
             
+
+            //message OK envoi suite
+            if(waitingCommands.isEmpty()){
+                break;
+            }
+            waitingCommands.getFirst().sendMessage(output);
+            waitingCommands.removeFirst();
+            break;
+                    
+                    
+                    
+                    
+                
+            }
+            
         }
         
         
     }
+    
+    private void handleQuit(){
+        try {
+            socket.close();
+        } catch (IOException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        exit = true;
+    }
+    
+    private void handleRetr(){
+        
+    }
+    
+    private void handleStat(){
+        
+    }
+    
+    
+    
     
 }
