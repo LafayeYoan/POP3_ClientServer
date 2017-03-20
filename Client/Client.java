@@ -227,33 +227,46 @@ public class Client implements Runnable{
         }
 
         //On enregistre le message en local
-        String mail = "VALENDURE"; //message.args.toString(); //todo : découper les args attention le serveur renvoi plusieurs messages réseaux...
+        String mail = "temp"; //message.args.toString(); 
         System.out.println("OK RETR reçu:" + mail);
+        
+        String finalFileName = "unknownID" ;
 
         BufferedWriter writer = null;
-
+        File mailFile = new File(sourceMailFolder + mail + ".txt");
         try {
-            File mailFile = new File(sourceMailFolder + mail + ".txt"); //todo mettre id du mail en nom de fichier
-
             // This will output the full path where the file will be written to...
             System.out.println(mailFile.getCanonicalPath());
 
             writer = new BufferedWriter(new FileWriter(mailFile));
             String endMessage = "";
-            while(!endMessage.equals(".\r\n")){
+            while(!endMessage.equals(". ")){
                 MessageReseau mg = MessageReseau.readMessage(input);
+                endMessage = mg.toString();
                 writer.write(mg.toString()+"\r\n");
+                System.out.println(mg.toString());
+                if(mg.toString().contains("Message-ID")){
+                    finalFileName = mg.toString().split(":")[1];
+                }
             }
+            
 
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             try {
                 writer.close();
+                
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+        
+
+        File newFile = new File(sourceMailFolder + finalFileName + ".txt");
+        
+        System.out.println("fichier renomé:"+mailFile.renameTo(newFile));
+            
     }
     
     private void handleStat(MessageReseau message){
