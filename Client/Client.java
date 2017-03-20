@@ -5,6 +5,7 @@
  */
 package POP3_ClientServer.Client;
 
+import POP3_ClientServer.Server.ServerThread;
 import POP3_ClientServer.common.MessageReseau;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,12 +29,14 @@ public class Client {
     ClientEtat etat;
     
     ClientCommandes lastCommand;
+
     String user;
     String pass;
     boolean exit = false;
     boolean awnserWaited = true;
     
     LinkedList <MessageReseau> waitingCommands = new LinkedList<>();
+
     
     public static final String OK = "+OK";
     public static final String ERR = "-ERR";
@@ -120,6 +123,38 @@ public class Client {
                     break;
                     
                 case ERR:
+                    MessageReseau messageToSend;
+
+                    switch (etat){
+
+                        case CLOSED:
+                            System.out.println(message.args);
+                            break;
+
+                        case ATTENTE:
+                            System.out.println(message.args);
+                            System.out.println("[Fermeture de la connection...]");
+                            etat = ClientEtat.CLOSED;
+                            messageToSend = new MessageReseau("QUIT");
+                            messageToSend.sendMessage(output);
+                            lastCommand = ClientCommandes.QUIT;
+                            break;
+
+                        case ACTIF:
+                            System.out.println(message.args);
+                            System.out.println("[Nouvelle tentative...]");
+                            messageToSend = new MessageReseau("APOP", this.user);
+                            messageToSend.sendMessage(output);
+                            lastCommand = ClientCommandes.APOP;
+                            break;
+
+                        case CONNECTED:
+                            System.out.println(message.args);
+                            break;
+
+                        default:
+                            System.out.println("Erreur non prise en compte : " + message.args);
+                    }
                     break;
                     
                 default:
