@@ -74,7 +74,7 @@ public class Client {
                         case CLOSED:
                             switch(lastCommand){
                                 case QUIT:
-                                    handleQuit();
+                                    handleQuit(message);
                                     break;
                                 default:
                                      etat = ClientEtat.ATTENTE;
@@ -85,7 +85,7 @@ public class Client {
                         case ATTENTE:
                             switch(lastCommand){
                                 case QUIT:
-                                    handleQuit();
+                                    handleQuit(message);
                                     break;
                                 default:
                                     etat = ClientEtat.ACTIF;
@@ -108,13 +108,13 @@ public class Client {
                             
                             switch(lastCommand){
                                 case STAT:
-                                    this.handleStat();
+                                    this.handleStat(message);
                                     break;
                                 case RETR:
-                                    this.handleRetr();
+                                    this.handleRetr(message);
                                     break;
                                 case QUIT:                                    
-                                    this.handleQuit();
+                                    this.handleQuit(message);
                                     break;
                             }
                                  
@@ -167,6 +167,21 @@ public class Client {
                 break;
             }
             waitingCommands.getFirst().sendMessage(output);
+            switch(waitingCommands.getFirst().command){
+                case "APOP":
+                    lastCommand = ClientCommandes.APOP;
+                    break;
+                case "RETR":
+                    lastCommand = ClientCommandes.RETR;
+                    break;
+                case "STAT":
+                    lastCommand = ClientCommandes.STAT;
+                    break;
+                case "QUIT":
+                    lastCommand = ClientCommandes.QUIT;
+                    break;
+                    
+            }
             waitingCommands.removeFirst();
             awnserWaited = true;
             break;
@@ -181,8 +196,18 @@ public class Client {
         
         
     }
+    public void addRetr(int numMessage){
+        waitingCommands.add(new MessageReseau("RETR", numMessage+""));
+    }
     
-    private void handleQuit(){
+    public void addStat(){
+         waitingCommands.add(new MessageReseau("STAT"));
+    }
+    
+
+    
+    
+    private void handleQuit(MessageReseau message){
         try {
             socket.close();
         } catch (IOException ex) {
@@ -192,12 +217,12 @@ public class Client {
         exit = true;
     }
     
-    private void handleRetr(){
-        
+    private void handleRetr(MessageReseau message){
+        System.out.println("OK RETR reçu:"+message.args);
     }
     
-    private void handleStat(){
-        
+    private void handleStat(MessageReseau message){
+        System.out.println("OK STAT reçu:"+message.args);
     }
     
     
