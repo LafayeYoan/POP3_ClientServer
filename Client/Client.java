@@ -60,9 +60,10 @@ public class Client {
         
         while(!exit){
             if(awnserWaited){
+
                 MessageReseau message  = MessageReseau.readMessage(input);
             
-            
+                awnserWaited = false;
             switch (message.command){
                 case OK:
                     
@@ -89,6 +90,7 @@ public class Client {
                                     //envoi APOP
                                     MessageReseau toSend= new MessageReseau("APOP",user);
                                     toSend.sendMessage(output);
+                                    awnserWaited = true;
                                     lastCommand = ClientCommandes.QUIT;
                             }          
                             
@@ -131,6 +133,7 @@ public class Client {
             }
             waitingCommands.getFirst().sendMessage(output);
             waitingCommands.removeFirst();
+            awnserWaited = true;
             break;
                     
                     
