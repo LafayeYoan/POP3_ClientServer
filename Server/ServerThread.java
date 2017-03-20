@@ -51,10 +51,10 @@ public class ServerThread implements Runnable{
 
     @Override
     public void run() {
-        System.out.println("Un client s'est connecté.");
+        System.out.println("Un client s'est connecte.");
         etat = ServerEtat.AUTHORIZATION;
         //message de bienvenue
-        message = OK + "Bienvenue sur POP3 Sacha, nous vous souhaitons un agréable séjour."+ENDLINE;
+        message = OK + "Bienvenue sur le serveur POP3, nous vous souhaitons un agreable sejour."+ENDLINE;
         try {
             output.write(message.getBytes());
         } catch (IOException ex) {
@@ -83,7 +83,7 @@ public class ServerThread implements Runnable{
                             break;
                         }
                         
-                        messageToSend = new MessageReseau(OK,"L'utilisateur '"+user+"' s'est connecté.");
+                        messageToSend = new MessageReseau(OK,"L'utilisateur '"+user+"' s'est connecte.");
                         messageToSend.sendMessage(output);
                         
                         //change server state
@@ -91,7 +91,7 @@ public class ServerThread implements Runnable{
                         break;
                     }
                     
-                    messageToSend = new MessageReseau(ERR,"Le serveur est deja connecté");
+                    messageToSend = new MessageReseau(ERR,"Le serveur est deja connecte");
                     messageToSend.sendMessage(output);
                     //verification de la chaine de securité
                     //pas de verification, return ok                    
@@ -110,7 +110,7 @@ public class ServerThread implements Runnable{
                 case RETR:
                     if(etat == ServerEtat.TRANSACTION){
                         if(messageReceived.args == null){
-                            messageToSend=new MessageReseau(ERR,"Aucun parametres detectés");
+                            messageToSend=new MessageReseau(ERR,"Aucun parametres detectes");
                             messageToSend.sendMessage(output);
                             break;
                         }
@@ -118,18 +118,18 @@ public class ServerThread implements Runnable{
                         try{
                             messageNumber = Integer.parseInt(messageReceived.args[0]);
                         }catch(Exception e){
-                            messageToSend=new MessageReseau(ERR,"Le numéro du message doit etre un nombre");
+                            messageToSend=new MessageReseau(ERR,"Le numero du message doit etre un nombre");
                             messageToSend.sendMessage(output);
                             break;
                         }
                         
                         if(messageNumber <1 ){
-                            messageToSend=new MessageReseau(ERR,"Le numéro du message doit etre >= 1");
+                            messageToSend=new MessageReseau(ERR,"Le numero du message doit etre >= 1");
                             messageToSend.sendMessage(output);
                             break;
                         }
                         if(messageNumber >userManager.getNbMailsNotDeleted() ){
-                            messageToSend=new MessageReseau(ERR,"Le message avec ce numéro n'éxiste pas.");
+                            messageToSend=new MessageReseau(ERR,"Le message avec ce numero n'existe pas.");
                             messageToSend.sendMessage(output);
                             break;
                         }
@@ -146,7 +146,9 @@ public class ServerThread implements Runnable{
                     messageToSend = new MessageReseau(ERR,"Action impossible dans cet etat");
                     messageToSend.sendMessage(output);
                     break;
+
                 case QUIT:
+
                     //mise a jour du cache et arret du socket
                     try {
                         messageToSend=new MessageReseau(OK,"Fermeture OK");
@@ -169,10 +171,10 @@ public class ServerThread implements Runnable{
                             break;
                         
                         default:
-                            messageToSend = new MessageReseau(ERR, "Message non géré");
+                            messageToSend = new MessageReseau(ERR, "Message non gere");
                     }
                     messageToSend.sendMessage(output);
-                    System.out.println("message non géré");
+                    System.out.println("message non gere");
             }
         }
         

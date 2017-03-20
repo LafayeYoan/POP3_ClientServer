@@ -7,6 +7,7 @@ package POP3_ClientServer.Client;
 
 import POP3_ClientServer.Server.ServerThread;
 import POP3_ClientServer.common.MessageReseau;
+import sun.plugin2.message.Message;
 
 import javax.swing.filechooser.FileSystemView;
 import java.io.*;
@@ -30,22 +31,14 @@ public class Client implements Runnable{
     
     Socket socket;
     InputStream input;
-    
     OutputStream output;
-    
     ClientEtat etat;
-    
     ClientCommandes lastCommand;
-    
     Scanner sc;
-    
     String user;
     String pass;
-
     boolean exit = false;
-    
 
-    
     public static final String OK = "+OK";
     public static final String ERR = "-ERR";
     public static String sourceMailFolder =
@@ -69,122 +62,119 @@ public class Client implements Runnable{
     }
     
     public synchronized void run(){
-        
-        
+
         while(!exit){
             
-            //attete de la reponse associée            
-            System.out.println("en attente du serveur...");
+            //En attente du serveur
+            System.out.println("En attente du serveur...");
             MessageReseau message  = MessageReseau.readMessage(input);
-            System.out.println("[réponse du serveur reçue]:" + message);
-            
-            switch (message.command){
+            System.out.println("[Réponse du serveur reçue]:" + message);
 
-                case OK:
+            /* -------------- CAS VALIDES -------------- */
+            if(message.command.equals(OK)) {
 
-                    switch (etat){
-                        
-                        case CLOSED:
-                            switch(lastCommand){
-                                case QUIT:
-                                    handleQuit(message);
-                                    break;
-                                default:
-                                     etat = ClientEtat.ATTENTE;
-                            }                      
+                switch (etat) {
+                    case CLOSED:
+                        switch (lastCommand) {
+                            case QUIT:
+                                handleQuit();
+                                break;
+                            default:
+                                etat = ClientEtat.ATTENTE;
+                        }
 
-                            break;
+                        break;
 
-                        case ATTENTE:
-                            switch(lastCommand){
-                                case QUIT:
-                                    handleQuit(message);
-                                    break;
-                                default:
-                                    etat = ClientEtat.ACTIF;
-                                    
-                                    System.out.println("Saisir votre nom utilisateur");
+                    case ATTENTE:
+                        switch (lastCommand) {
+                            case QUIT:
+                                handleQuit();
+                                break;
+                            default:
+                                etat = ClientEtat.ACTIF;
+                                System.out.println("Saisir votre nom utilisateur");
+                                this.user = sc.nextLine();
+                                sendAPOP();
+                        }
+                        break;
 
-                                    //envoi APOP
-                                    this.user = sc.nextLine();
-                                    MessageReseau toSend= new MessageReseau("APOP",user);
-                                    toSend.sendMessage(output);
-                                    lastCommand = ClientCommandes.APOP;
-                            }          
+                    case ACTIF:
 
-                            break;
+                        etat = ClientEtat.CONNECTED;
 
-                        case ACTIF:
+                        System.out.println("--------------------------------");
+                        System.out.println("Les commandes possibles sont : ");
+                        System.out.println("[STAT]");
+                        System.out.println("[RETR x] avec x le numero du message");
+                        System.out.println("[QUIT]");
+                        System.out.println("--------------------------------");
 
-                            etat = ClientEtat.CONNECTED;
-                            sendUserMessage();
-                            break;
+                        sendUserMessage();
+                        break;
 
 
-                        case CONNECTED:
+                    case CONNECTED:
 
-                            switch(lastCommand){
-                                case STAT:
-                                    this.handleStat(message);
-                                    break;
-                                case RETR:
-                                    this.handleRetr(message);
-                                    break;
-                                case QUIT:                                    
-                                    this.handleQuit(message);
-                                    break;
-                            }
-                            
-                            sendUserMessage();
+                        switch (lastCommand) {
+                            case QUIT:
+                                this.handleQuit();
+                                continue;
+                            case STAT:
+                                this.handleStat(message);
+                                break;
+                            case RETR:
+                                this.handleRetr();
+                                break;
+                        }
+                        sendUserMessage();
+                        break;
+                }
+            }
 
-                            break;
-                    }
-                    break;
 
-                case ERR:
-                    MessageReseau messageToSend;
+            /* -------------- CAS D'ERREURS -------------- */
+            if(message.command.equals(ERR)) {
 
-                    switch (etat){
+                MessageReseau messageToSend;
 
-                        case CLOSED:
-                            System.out.println(message);
-                            break;
+                switch (etat) {
 
-                        case ATTENTE:
-                            System.out.println(message);
-                            System.out.println("[Fermeture de la connection...]");
-                            etat = ClientEtat.CLOSED;
-                            messageToSend = new MessageReseau("QUIT");
-                            messageToSend.sendMessage(output);
-                            lastCommand = ClientCommandes.QUIT;
-                            break;
+                    case CLOSED:
+                        System.out.println(message);
+                        break;
 
-                        case ACTIF:
-                            System.out.println(message);
-                            System.out.println("[Nouvelle tentative...]");
-                            messageToSend = new MessageReseau("APOP", this.user);
-                            messageToSend.sendMessage(output);
-                            lastCommand = ClientCommandes.APOP;
-                            break;
+                    case ATTENTE:
+                        System.out.println(message);
+                        System.out.println("[Fermeture de la connection...]");
+                        etat = ClientEtat.CLOSED;
+                        messageToSend = new MessageReseau("QUIT");
+                        messageToSend.sendMessage(output);
+                        lastCommand = ClientCommandes.QUIT;
+                        break;
 
-                        case CONNECTED:
-                            System.out.println(message);
-                            
-                            sendUserMessage();
-                            break;
+                    case ACTIF:
+                        System.out.println(message);
+                        System.out.println("[Nouvelle tentative...]");
+                        sendAPOP();
+                        break;
 
-                        default:
-                            System.out.println("Erreur non prise en compte : " + message);
-                    }
-                    break;
+                    case CONNECTED:
+                        System.out.println(message);
+                        sendUserMessage();
+                        break;
 
-                default:
-                    System.out.println("message inconu");
+                    default:
+                        System.out.println("Erreur non prise en compte : " + message);
+                }
+                break;
             }
         }
     }
-    
-   private void sendUserMessage(){
+
+    /***
+     * Envoi un MessageReseau au server en fonction de la commande donnée par l'utilisateur
+     */
+    private void sendUserMessage(){
        System.out.println("Commande:");
        
        String[] splitedmess = sc.nextLine().split(" ");
@@ -195,14 +185,17 @@ public class Client implements Runnable{
        for (int i = 1; i< splitedmess.length; i++){
            param[i-1] = splitedmess[i];
        }
-       
+
        MessageReseau mess = new MessageReseau(comm,param);
        mess.sendMessage(output);
        
-       lastCommand = ClientCommandes.getValue(comm);       
+       lastCommand = ClientCommandes.getValue(comm);
    }
-    
-    private void handleQuit(MessageReseau message){
+
+    /***
+     * Gestion du QUIT
+     */
+    private void handleQuit(){
         try {
             socket.close();
         } catch (IOException ex) {
@@ -213,64 +206,66 @@ public class Client implements Runnable{
     }
 
     /***
-     * Gestion du RETR + Enregistrement des messages sur le poste client
-     * @param message
+     * Gestion du RETR
+     * + Enregistrement des messages sur le poste client
      */
-    private void handleRetr(MessageReseau message){
+    private void handleRetr(){
 
+        String filename = "";
+        String currentMsg = "";
+        StringBuilder text = new StringBuilder();
 
-        //Si le dossier n'existe pas, on le crée
+        //Si le dossier pour enregistrer les mails n'existe pas, on le crée
         if (!Files.exists(Paths.get(sourceMailFolder))) {
-
             File theDir = new File(sourceMailFolder);
             theDir.mkdir();
         }
 
-        //On enregistre le message en local
-        String mail = "temp"; //message.args.toString(); 
-        System.out.println("OK RETR reçu:" + mail);
-        
-        String finalFileName = "unknownID" ;
+        System.out.println("OK RETR reçu : ");
+        System.out.println("--------------------------------");
 
-        BufferedWriter writer = null;
-        File mailFile = new File(sourceMailFolder + mail + ".txt");
-        try {
-            // This will output the full path where the file will be written to...
-            System.out.println(mailFile.getCanonicalPath());
+        //Enregistrement en local + affichage
+        while(!currentMsg.equals(". ")){
 
-            writer = new BufferedWriter(new FileWriter(mailFile));
-            String endMessage = "";
-            while(!endMessage.equals(". ")){
-                MessageReseau mg = MessageReseau.readMessage(input);
-                endMessage = mg.toString();
-                writer.write(mg.toString()+"\r\n");
-                System.out.println(mg.toString());
-                if(mg.toString().contains("Message-ID")){
-                    finalFileName = mg.toString().split(":")[1];
-                }
+            MessageReseau mg = MessageReseau.readMessage(input);
+
+            currentMsg = mg.toString();
+            text.append(currentMsg + "\r\n");
+            System.out.println(currentMsg);
+
+            //Extraction de l'id du message
+            if(currentMsg.contains("Message-ID")){
+                filename = ((currentMsg.split(":")[1]).split("@")[0]).split("<")[1];
+
             }
-            
+        }
+
+        //Ecriture dans le fichier
+        try {
+
+            File file = new File(sourceMailFolder + filename + ".txt");
+            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+
+            writer.append(text);
+            writer.close();
 
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            try {
-                writer.close();
-                
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
         }
-        
 
-        File newFile = new File(sourceMailFolder + finalFileName + ".txt");
-        
-        System.out.println("fichier renomé:"+mailFile.renameTo(newFile));
-            
+        System.out.println("--------------------------------");
     }
     
     private void handleStat(MessageReseau message){
-        System.out.println(message);
+        //do nothing
+    }
+
+    /***
+     * Gestion du APOP
+     */
+    private void sendAPOP() {
+        new MessageReseau("APOP", this.user).sendMessage(output);
+        lastCommand = ClientCommandes.APOP;
     }
     
     public static void main(String [] args){
