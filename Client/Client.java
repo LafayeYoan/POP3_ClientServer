@@ -7,10 +7,13 @@ package POP3_ClientServer.Client;
 
 import POP3_ClientServer.Server.ServerThread;
 import POP3_ClientServer.common.MessageReseau;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+
+import javax.swing.filechooser.FileSystemView;
+import java.io.*;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,6 +43,8 @@ public class Client {
     
     public static final String OK = "+OK";
     public static final String ERR = "-ERR";
+    public static String sourceMailFolder =
+            FileSystemView.getFileSystemView().getDefaultDirectory().getPath() + "/MailsPOP3/";
     
     public Client(String adress, int port, String user, String pass){
         this.user = user;
@@ -217,9 +222,44 @@ public class Client {
 
         exit = true;
     }
-    
+
+    /***
+     * Gestion du RETR + Enregistrement des messages sur le poste client
+     * @param message
+     */
     private void handleRetr(MessageReseau message){
-        System.out.println("OK RETR reçu:"+message.args);
+
+        //Si le dossier n'existe pas, on le crée
+        if (!Files.exists(Paths.get(sourceMailFolder))) {
+
+            File theDir = new File(sourceMailFolder);
+            theDir.mkdir();
+        }
+
+        //On enregistre le message en local
+        String mail = "VALENDURE"; //message.args.toString(); //todo : découper les args attention le serveur renvoi plusieurs messages réseaux...
+        System.out.println("OK RETR reçu:" + mail);
+
+        BufferedWriter writer = null;
+
+        try {
+            File mailFile = new File(sourceMailFolder + mail + ".txt"); //todo mettre id du mail en nom de fichier
+
+            // This will output the full path where the file will be written to...
+            System.out.println(mailFile.getCanonicalPath());
+
+            writer = new BufferedWriter(new FileWriter(mailFile));
+            writer.write("Hello world!");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                writer.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
     
     private void handleStat(MessageReseau message){

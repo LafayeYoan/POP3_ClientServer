@@ -2,6 +2,7 @@ package POP3_ClientServer.Client;
 
 import POP3_ClientServer.common.EMail;
 import POP3_ClientServer.common.MailFileManager;
+import POP3_ClientServer.common.MessageReseau;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -13,6 +14,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
+import javax.swing.filechooser.FileSystemView;
 import java.io.IOException;
 import java.util.Scanner;
 
@@ -22,11 +24,12 @@ import java.util.Scanner;
 public class ClientApp {
 
     public static void main(String[] args) {
+
         System.out.println("Saisissez votre nom d'utilisateur : \n");
         Scanner sc = new Scanner(System.in);
         String name = sc.nextLine();
 
-        Client c = new Client("localhost", 5555, name, null);
+        Client c = new Client("localhost", 5555, "sacha", null);
     }
 
     /*private Stage primaryStage;
