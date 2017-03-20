@@ -14,14 +14,22 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.Scanner;
 
 /***
- * Interface Client POP3 Application
  * LAFAYE DE MICHEAUX Yoan - LHOPITAL Sacha
  */
-public class ClientApp extends Application {
+public class ClientApp {
 
-    private Stage primaryStage;
+    public static void main(String[] args) {
+        System.out.println("Saisissez votre nom d'utilisateur : \n");
+        Scanner sc = new Scanner(System.in);
+        String name = sc.nextLine();
+
+        Client c = new Client("localhost", 5555, name, null);
+    }
+
+    /*private Stage primaryStage;
     private BorderPane rootLayout;
     private ObservableList<EMail> mails = FXCollections.observableArrayList();
 
@@ -29,10 +37,10 @@ public class ClientApp extends Application {
         launch(args);
     }
 
-    /**
+    *//**
      * Returns the data as an observable list of mail.
      * @return
-     */
+     *//*
     public ObservableList<EMail> getMails() {
         return mails;
     }
@@ -58,9 +66,9 @@ public class ClientApp extends Application {
         showMailOverview();
     }
 
-    /**
+    *//**
      * Shows the mails overview inside the root layout.
-     */
+     *//*
     public void showMailOverview() {
         try {
             // Load mails overview.
@@ -78,5 +86,5 @@ public class ClientApp extends Application {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
+    }*/
 }

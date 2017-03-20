@@ -5,6 +5,7 @@ package POP3_ClientServer.Client;
  */
 public enum ClientCommandes {
 
+    EMPTY,
     STAT,
     RETR,
     APOP,

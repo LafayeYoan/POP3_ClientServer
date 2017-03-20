@@ -11,7 +11,7 @@ import javafx.scene.control.TableView;
  */
 public class MailsOverview {
 
-    private ClientApp mainApp;
+    /*private ClientApp mainApp;
     private String clientName;
 
     @FXML
@@ -21,7 +21,7 @@ public class MailsOverview {
     @FXML
     private TableColumn<EMail, String> objetColumn;
 
-    /* Plus tard pour vue de détail ?
+    *//* Plus tard pour vue de détail ?
     @FXML
     private Label ExpediteurLabel;
     @FXML
@@ -32,7 +32,7 @@ public class MailsOverview {
     private Label DestinataireLabel;
     @FXML
     private Label messageLabel;
-    */
+    *//*
 
     public MailsOverview() {}
 
@@ -40,10 +40,10 @@ public class MailsOverview {
         this.clientName = n;
     }
 
-    /**
+    *//**
      * Initializes the controller class. This method is automatically called
      * after the fxml file has been loaded.
-     */
+     *//*
     @FXML
     private void initialize() {
         // Initialize the mail table with the two columns.
@@ -51,16 +51,16 @@ public class MailsOverview {
         objetColumn.setCellValueFactory(cellData -> cellData.getValue().getObjetProperty());
     }
 
-    /**
+    *//**
      * Is called by the main application to give a reference back to itself.
      *
      * @param mainApp
-     */
+     *//*
     public void setMainApp(ClientApp mainApp) {
         this.mainApp = mainApp;
 
         // Add observable list data to the vue
         mailsTable.setItems(mainApp.getMails());
-    }
+    }*/
     
 }

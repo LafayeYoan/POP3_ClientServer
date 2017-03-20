@@ -44,6 +44,7 @@ public class Client {
     public Client(String adress, int port, String user, String pass){
         this.user = user;
         this.pass = pass;
+        lastCommand = ClientCommandes.EMPTY;
         
         try {
             socket = new Socket(adress, port);
@@ -94,7 +95,7 @@ public class Client {
                                     MessageReseau toSend= new MessageReseau("APOP",user);
                                     toSend.sendMessage(output);
                                     awnserWaited = true;
-                                    lastCommand = ClientCommandes.QUIT;
+                                    lastCommand = ClientCommandes.APOP;
                             }          
                             
                             break;
