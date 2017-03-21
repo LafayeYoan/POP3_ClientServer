@@ -10,6 +10,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.net.ssl.*;
 
 /**
  *
@@ -23,9 +24,15 @@ public class Server {
     public static void main (String [] args){
         
         try {
-            serverSocket = new ServerSocket(PORT);
+            //non securisé
+            //serverSocket = new ServerSocket(PORT);
+            //sécurisé
+            serverSocket = SSLServerSocketFactory.getDefault().createServerSocket(PORT);
+            //set cyphersuite
+            ((SSLServerSocket)serverSocket).setEnabledCipherSuites(new String[]{"SSL_DH_anon_WITH_DES_CBC_SHA"});
             while(true){
                 Socket socket = serverSocket.accept();
+                
                 
                 Thread t = new Thread(new ServerThread(socket));
                 t.start();
@@ -33,7 +40,7 @@ public class Server {
         } catch (IOException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+         
         
         
     }

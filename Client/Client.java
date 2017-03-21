@@ -7,7 +7,6 @@ package POP3_ClientServer.Client;
 
 import POP3_ClientServer.Server.ServerThread;
 import POP3_ClientServer.common.MessageReseau;
-import sun.plugin2.message.Message;
 
 import javax.swing.filechooser.FileSystemView;
 import java.io.*;
@@ -22,6 +21,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.net.ssl.*;
 
 /**
  *
@@ -50,7 +50,8 @@ public class Client implements Runnable{
         
         sc = new Scanner (System.in);
         try {
-            socket = new Socket(adress, port);
+            socket = SSLSocketFactory.getDefault().createSocket(adress, port);
+            ((SSLSocket)socket).setEnabledCipherSuites(new String[]{"SSL_DH_anon_WITH_DES_CBC_SHA"});
 
             input = socket.getInputStream();
             output = socket.getOutputStream();
