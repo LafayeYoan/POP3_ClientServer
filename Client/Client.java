@@ -7,6 +7,7 @@ package POP3_ClientServer.Client;
 
 import POP3_ClientServer.Server.ServerThread;
 import POP3_ClientServer.common.MessageReseau;
+import POP3_ClientServer.common.UserManagement;
 
 import javax.swing.filechooser.FileSystemView;
 import java.io.*;
@@ -30,13 +31,14 @@ import javax.net.ssl.*;
 public class Client implements Runnable{
     
     Socket socket;
-    InputStream input;
-    OutputStream output;
+    InputStreamReader input;
+    OutputStreamWriter output;
     ClientEtat etat;
     ClientCommandes lastCommand;
     Scanner sc;
     String user;
     String pass;
+    long timestamp;
     boolean exit = false;
 
     public static final String OK = "+OK";
@@ -53,8 +55,8 @@ public class Client implements Runnable{
             socket = SSLSocketFactory.getDefault().createSocket(adress, port);
             ((SSLSocket)socket).setEnabledCipherSuites(new String[]{"SSL_DH_anon_WITH_DES_CBC_SHA"});
 
-            input = socket.getInputStream();
-            output = socket.getOutputStream();
+            input = new InputStreamReader(socket.getInputStream(),"UTF-8");
+            output = new OutputStreamWriter(socket.getOutputStream(),"UTF-8");
         } catch (IOException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -93,9 +95,13 @@ public class Client implements Runnable{
                                 break;
                             default:
                                 etat = ClientEtat.ACTIF;
+                                timestamp = Long.parseLong(message.args[0].trim().replace("<", "").replace(">",""));
+                                System.out.println(timestamp);
                                 System.out.println("Saisir votre nom utilisateur");
                                 this.user = sc.nextLine();
-                                sendAPOP();
+                                System.out.println("Saisir votre mot de passe");
+                                this.pass = sc.nextLine();
+                                sendAPOP(timestamp);
                         }
                         break;
 
@@ -156,7 +162,7 @@ public class Client implements Runnable{
                     case ACTIF:
                         System.out.println(message);
                         System.out.println("[Nouvelle tentative...]");
-                        sendAPOP();
+                        sendAPOP(timestamp);
                         break;
 
                     case CONNECTED:
@@ -264,8 +270,8 @@ public class Client implements Runnable{
     /***
      * Gestion du APOP
      */
-    private void sendAPOP() {
-        new MessageReseau("APOP", this.user).sendMessage(output);
+    private void sendAPOP(long timestamp) {
+        new MessageReseau("APOP", this.user, UserManagement.hashMD5("<"+timestamp+">"+pass)).sendMessage(output);
         lastCommand = ClientCommandes.APOP;
     }
     

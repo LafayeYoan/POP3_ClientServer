@@ -8,9 +8,12 @@ package POP3_ClientServer.Server;
 import POP3_ClientServer.common.EMail;
 import POP3_ClientServer.common.MailFileManager;
 import POP3_ClientServer.common.MessageReseau;
+import POP3_ClientServer.common.UserManagement;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,8 +24,8 @@ import java.util.logging.Logger;
  */
 public class ServerThread implements Runnable{
     private Socket socket;
-    private InputStream input;
-    private OutputStream output;
+    private InputStreamReader input;
+    private OutputStreamWriter output;
     private String message;
     private ServerEtat etat;
     
@@ -31,8 +34,8 @@ public class ServerThread implements Runnable{
     private static final String RETR = "RETR";
     private static final String QUIT = "QUIT";
     
-    private static final String OK = "+OK ";
-    private static final String ERR = "-ERR ";
+    private static final String OK = "+OK";
+    private static final String ERR = "-ERR";
     private static final String ENDLINE = "\r\n";
     
     private String user;
@@ -41,8 +44,8 @@ public class ServerThread implements Runnable{
     public ServerThread (Socket socket){
         try {
             this.socket = socket;
-            input = socket.getInputStream();
-            output = socket.getOutputStream();
+            input = new InputStreamReader(socket.getInputStream(), "UTF-8");
+            output = new OutputStreamWriter(socket.getOutputStream(),"UTF-8");
             etat = ServerEtat.CLOSED;
         } catch (IOException ex) {
             Logger.getLogger(ServerThread.class.getName()).log(Level.SEVERE, null, ex);
@@ -53,13 +56,11 @@ public class ServerThread implements Runnable{
     public void run() {
         System.out.println("Un client s'est connecte.");
         etat = ServerEtat.AUTHORIZATION;
+        
+        long timestamp = new java.util.Date().getTime();
         //message de bienvenue
-        message = OK + "Bienvenue sur le serveur POP3, nous vous souhaitons un agreable sejour."+ENDLINE;
-        try {
-            output.write(message.getBytes());
-        } catch (IOException ex) {
-            Logger.getLogger(ServerThread.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        MessageReseau bienvenue = new MessageReseau(OK,"<"+timestamp+">");
+        bienvenue.sendMessage(output);
         boolean exit = false;
         while(!exit){
             MessageReseau messageReceived = MessageReseau.readMessage(input);
@@ -75,10 +76,16 @@ public class ServerThread implements Runnable{
                             break;
                         }
                         user = messageReceived.args[0];
+                        //verification user OK
+                        if(!UserManagement.isUserOk(user, timestamp, messageReceived.args[1])){
+                            messageToSend = new MessageReseau(ERR,"Utilisateur invalide erreur authentification");
+                            messageToSend.sendMessage(output);
+                            break;
+                        }
                         
                         userManager = new MailFileManager(user);
                         if(!userManager.userExist()){
-                            messageToSend = new MessageReseau(ERR,"Utilisateur invalide");
+                            messageToSend = new MessageReseau(ERR,"Utilisateur invalide fichier mail introuvable");
                             messageToSend.sendMessage(output);
                             break;
                         }

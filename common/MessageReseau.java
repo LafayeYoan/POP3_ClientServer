@@ -7,7 +7,9 @@ package POP3_ClientServer.common;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,7 +28,7 @@ public class MessageReseau {
         this.args = args;
     }
     
-    public static MessageReseau readMessage(InputStream input){
+    public static MessageReseau readMessage(InputStreamReader input){
         
         int byteRead = 0;
         StringBuilder sb = new StringBuilder();
@@ -56,10 +58,11 @@ public class MessageReseau {
         String command = splitedMessage[0];
         String [] args = splitedMessage.length>1 ? Arrays.copyOfRange(splitedMessage, 1, splitedMessage.length) : null;
         
+        
         return new MessageReseau(command,args);
     }
     
-    public  void sendMessage(OutputStream output){
+    public  void sendMessage(OutputStreamWriter output){
         String sMessage = this.command;
         if(this.args!=null){
             for (int i=0; i< this.args.length; i++ ){
@@ -70,7 +73,7 @@ public class MessageReseau {
         sMessage += "\r\n";
         
         try {
-            output.write(sMessage.getBytes());
+            output.write(sMessage.toCharArray());
             output.flush();
         } catch (IOException ex) {
             Logger.getLogger(MessageReseau.class.getName()).log(Level.SEVERE, null, ex);
