@@ -5,7 +5,6 @@
  */
 package POP3_ClientServer.Client;
 
-import POP3_ClientServer.Server.ServerThread;
 import POP3_ClientServer.common.MessageReseau;
 import POP3_ClientServer.common.UserManagement;
 
@@ -14,11 +13,8 @@ import java.io.*;
 import java.net.Socket;
 
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,20 +22,23 @@ import javax.net.ssl.*;
 
 /**
  *
- * @author lafay
+ * @author LAFAYE DE MICHEAUX Yoan - LHOPITAL Sacha
  */
 public class Client implements Runnable{
     
     Socket socket;
+    Scanner sc;
     InputStreamReader input;
     OutputStreamWriter output;
+
     ClientEtat etat;
     ClientCommandes lastCommand;
-    Scanner sc;
+
     String user;
     String pass;
     long timestamp;
     boolean exit = false;
+    int apopTentatives = 0;
 
     public static final String OK = "+OK";
     public static final String ERR = "-ERR";
@@ -76,104 +75,93 @@ public class Client implements Runnable{
             /* -------------- CAS VALIDES -------------- */
             if(message.command.equals(OK)) {
 
-                switch (etat) {
-                    case CLOSED:
-                        switch (lastCommand) {
-                            case QUIT:
-                                handleQuit();
-                                break;
-                            default:
-                                etat = ClientEtat.ATTENTE;
-                        }
+                /* Gestion du QUIT */
+                if(lastCommand.equals(ClientCommandes.QUIT)) {
 
-                        break;
+                    try {
+                        socket.close();
+                    } catch (IOException ex) {
+                        Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    exit = true;
+                    continue;
 
-                    case ATTENTE:
-                        switch (lastCommand) {
-                            case QUIT:
-                                handleQuit();
-                                break;
-                            default:
-                                etat = ClientEtat.ACTIF;
-                                timestamp = Long.parseLong(message.args[0].trim().replace("<", "").replace(">",""));
-                                System.out.println(timestamp);
-                                System.out.println("Saisir votre nom utilisateur");
-                                this.user = sc.nextLine();
-                                System.out.println("Saisir votre mot de passe");
-                                this.pass = sc.nextLine();
-                                sendAPOP(timestamp);
-                        }
-                        break;
+                } else {
 
-                    case ACTIF:
+                    switch (etat) {
 
-                        etat = ClientEtat.CONNECTED;
+                        case CLOSED:
+                            etat = ClientEtat.ATTENTE;
+                            break;
 
-                        System.out.println("--------------------------------");
-                        System.out.println("Les commandes possibles sont : ");
-                        System.out.println("[STAT]");
-                        System.out.println("[RETR x] avec x le numero du message");
-                        System.out.println("[QUIT]");
-                        System.out.println("--------------------------------");
+                        case ATTENTE:
+                            etat = ClientEtat.ACTIF;
+                            timestamp = Long.parseLong(message.args[0].trim().replace("<", "").replace(">", ""));
+                            sendAPOP(timestamp);
+                            break;
 
-                        sendUserMessage();
-                        break;
+                        case ACTIF:
+
+                            etat = ClientEtat.CONNECTED;
+
+                            System.out.println("--------------------------------");
+                            System.out.println("Les commandes possibles sont : ");
+                            System.out.println("[STAT]");
+                            System.out.println("[RETR x] avec x le numero du message");
+                            System.out.println("[QUIT]");
+                            System.out.println("--------------------------------");
+
+                            sendUserMessage();
+                            break;
 
 
-                    case CONNECTED:
-
-                        switch (lastCommand) {
-                            case QUIT:
-                                this.handleQuit();
-                                continue;
-                            case STAT:
-                                this.handleStat(message);
-                                break;
-                            case RETR:
-                                this.handleRetr();
-                                break;
-                        }
-                        sendUserMessage();
-                        break;
+                        case CONNECTED:
+                            switch (lastCommand) {
+                                case STAT:
+                                    this.handleStat(message);
+                                    break;
+                                case RETR:
+                                    this.handleRetr();
+                                    break;
+                            }
+                            sendUserMessage();
+                            break;
+                    }
                 }
             }
-
 
             /* -------------- CAS D'ERREURS -------------- */
             if(message.command.equals(ERR)) {
 
-                MessageReseau messageToSend;
-
                 switch (etat) {
 
                     case CLOSED:
-                        System.out.println(message);
+                        //do nothing
                         break;
 
                     case ATTENTE:
-                        System.out.println(message);
                         System.out.println("[Fermeture de la connection...]");
                         etat = ClientEtat.CLOSED;
-                        messageToSend = new MessageReseau("QUIT");
-                        messageToSend.sendMessage(output);
-                        lastCommand = ClientCommandes.QUIT;
+                        sendQuit();
                         break;
 
                     case ACTIF:
-                        System.out.println(message);
-                        System.out.println("[Nouvelle tentative...]");
-                        sendAPOP(timestamp);
+                        if(apopTentatives < 5) {
+                            System.out.println("[Nouvelle tentative APOP n°" + apopTentatives + "]");
+                            sendAPOP(timestamp);
+                        } else {
+                            System.out.println("[Echec APOP - Exit programme]");
+                            sendQuit();
+                        }
                         break;
 
                     case CONNECTED:
-                        System.out.println(message);
                         sendUserMessage();
                         break;
 
                     default:
-                        System.out.println("Erreur non prise en compte : " + message);
+                        System.out.println("Erreur non prise en compte !");
                 }
-                break;
             }
         }
     }
@@ -198,19 +186,6 @@ public class Client implements Runnable{
        
        lastCommand = ClientCommandes.getValue(comm);
    }
-
-    /***
-     * Gestion du QUIT
-     */
-    private void handleQuit(){
-        try {
-            socket.close();
-        } catch (IOException ex) {
-            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        exit = true;
-    }
 
     /***
      * Gestion du RETR
@@ -268,11 +243,25 @@ public class Client implements Runnable{
     }
 
     /***
-     * Gestion du APOP
+     * Tentative d'envoi d'un APOP
+     * @param timestamp
      */
     private void sendAPOP(long timestamp) {
+        System.out.println("Saisir votre nom utilisateur");
+        user = sc.nextLine();
+        System.out.println("Saisir votre mot de passe");
+        pass = sc.nextLine();
         new MessageReseau("APOP", this.user, UserManagement.hashMD5("<"+timestamp+">"+pass)).sendMessage(output);
         lastCommand = ClientCommandes.APOP;
+        apopTentatives++;
+    }
+
+    /***
+     * Envoi un QUIT
+     */
+    private void sendQuit() {
+        new MessageReseau("QUIT").sendMessage(output);
+        lastCommand = ClientCommandes.QUIT;
     }
     
     public static void main(String [] args){

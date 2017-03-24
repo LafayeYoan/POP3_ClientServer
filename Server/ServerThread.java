@@ -26,7 +26,6 @@ public class ServerThread implements Runnable{
     private Socket socket;
     private InputStreamReader input;
     private OutputStreamWriter output;
-    private String message;
     private ServerEtat etat;
     
     private static final String APOP = "APOP";
@@ -36,7 +35,6 @@ public class ServerThread implements Runnable{
     
     private static final String OK = "+OK";
     private static final String ERR = "-ERR";
-    private static final String ENDLINE = "\r\n";
     
     private String user;
     MailFileManager userManager;
@@ -62,10 +60,12 @@ public class ServerThread implements Runnable{
         MessageReseau bienvenue = new MessageReseau(OK,"<"+timestamp+">");
         bienvenue.sendMessage(output);
         boolean exit = false;
+
         while(!exit){
+
             MessageReseau messageReceived = MessageReseau.readMessage(input);
-            
             MessageReseau messageToSend;
+
             switch (messageReceived.command){
                 
                 case APOP:
@@ -184,10 +184,6 @@ public class ServerThread implements Runnable{
                     System.out.println("message non gere");
             }
         }
-        
-        
-        
-        
     }
     
 }

@@ -45,27 +45,23 @@ public class Server {
             UserManagement.createUser(user, pass);
         }
         
-        System.out.println("Serveur démaré");
+        System.out.println("Serveur démarré");
         
         try {
-            //non securisé
-            //serverSocket = new ServerSocket(PORT);
-            //sécurisé
+            //Socket Sécurisée
             serverSocket = SSLServerSocketFactory.getDefault().createServerSocket(PORT);
-            //set cyphersuite
+
+            //Setup Cyphersuite
             ((SSLServerSocket)serverSocket).setEnabledCipherSuites(new String[]{"SSL_DH_anon_WITH_DES_CBC_SHA"});
+
             while(true){
+
                 Socket socket = serverSocket.accept();
-                
-                
                 Thread t = new Thread(new ServerThread(socket));
                 t.start();
             }
         } catch (IOException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
-         
-        
-        
     }
 }
