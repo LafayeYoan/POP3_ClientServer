@@ -56,7 +56,7 @@ public class ServerThread implements Runnable{
         etat = ServerEtat.AUTHORIZATION;
         
         long timestamp = new java.util.Date().getTime();
-        //message de bienvenue
+
         MessageReseau bienvenue = new MessageReseau(OK,"<"+timestamp+">");
         bienvenue.sendMessage(output);
         boolean exit = false;
@@ -76,6 +76,7 @@ public class ServerThread implements Runnable{
                             break;
                         }
                         user = messageReceived.args[0];
+
                         //verification user OK
                         if(!UserManagement.isUserOk(user, timestamp, messageReceived.args[1])){
                             messageToSend = new MessageReseau(ERR,"Utilisateur invalide erreur authentification");
@@ -100,8 +101,6 @@ public class ServerThread implements Runnable{
                     
                     messageToSend = new MessageReseau(ERR,"Le serveur est deja connecte");
                     messageToSend.sendMessage(output);
-                    //verification de la chaine de securité
-                    //pas de verification, return ok                    
                     break;
                     
                 case STAT:

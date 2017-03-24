@@ -117,9 +117,6 @@ public class Client implements Runnable{
 
                         case CONNECTED:
                             switch (lastCommand) {
-                                case STAT:
-                                    this.handleStat(message);
-                                    break;
                                 case RETR:
                                     this.handleRetr();
                                     break;
@@ -237,20 +234,23 @@ public class Client implements Runnable{
 
         System.out.println("--------------------------------");
     }
-    
-    private void handleStat(MessageReseau message){
-        //do nothing
-    }
 
     /***
      * Tentative d'envoi d'un APOP
      * @param timestamp
      */
     private void sendAPOP(long timestamp) {
-        System.out.println("Saisir votre nom utilisateur");
+        System.out.println("Saisir votre nom utilisateur (ou QUIT pour fermer le programme)");
         user = sc.nextLine();
+
+        if(user.equals("QUIT")) {
+            sendQuit();
+            return;
+        }
+
         System.out.println("Saisir votre mot de passe");
         pass = sc.nextLine();
+
         new MessageReseau("APOP", this.user, UserManagement.hashMD5("<"+timestamp+">"+pass)).sendMessage(output);
         lastCommand = ClientCommandes.APOP;
         apopTentatives++;

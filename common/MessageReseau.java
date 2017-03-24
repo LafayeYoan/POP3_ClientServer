@@ -27,7 +27,12 @@ public class MessageReseau {
         this.command = command;
         this.args = args;
     }
-    
+
+    /***
+     * Décortique les message transmit par sockets
+     * @param input
+     * @return
+     */
     public static MessageReseau readMessage(InputStreamReader input){
         
         int byteRead = 0;
@@ -57,8 +62,7 @@ public class MessageReseau {
         String [] splitedMessage = sb.toString().replaceAll("\r\n","").split(" ");
         String command = splitedMessage[0];
         String [] args = splitedMessage.length>1 ? Arrays.copyOfRange(splitedMessage, 1, splitedMessage.length) : null;
-        
-        
+
         return new MessageReseau(command,args);
     }
     
