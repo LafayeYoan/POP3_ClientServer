@@ -29,7 +29,7 @@ A Server and a Client POP3 made in IPC lecture at Polytech
 
 ## Installation
 
-- Create a new JavaFX project on your IDE (Netbeans, IntelliJ, ...)
+- Create a new Java project on your IDE (Netbeans, IntelliJ, ...)
 - Download the sources inside your src directory
 - Run the server app and test it with the client
 
