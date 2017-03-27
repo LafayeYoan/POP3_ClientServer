@@ -265,7 +265,13 @@ public class Client implements Runnable{
     }
     
     public static void main(String [] args){
-        Client c = new Client("localhost", 5555);
+        Scanner sc = new Scanner(System.in);
+        
+        System.out.println("Quelle est l'adresse du serveur?");
+        String adress = sc.nextLine();
+        System.out.println("Quel est le port du serveur?");
+        int port = Integer.parseInt(sc.nextLine());
+        Client c = new Client(adress, port);
         c.run();
     }   
 }

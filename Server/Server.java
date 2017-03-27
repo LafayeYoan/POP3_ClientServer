@@ -45,14 +45,17 @@ public class Server {
             UserManagement.createUser(user, pass);
         }
         
-        System.out.println("Serveur démarré");
+        System.out.println("Quel est le port d'execution du serveur?");
+        int port = Integer.parseInt(sc.nextLine());
         
         try {
             //Socket Sécurisée
-            serverSocket = SSLServerSocketFactory.getDefault().createServerSocket(PORT);
+            serverSocket = SSLServerSocketFactory.getDefault().createServerSocket(port);
 
             //Setup Cyphersuite
             ((SSLServerSocket)serverSocket).setEnabledCipherSuites(new String[]{"SSL_DH_anon_WITH_DES_CBC_SHA"});
+            
+            System.out.println("Serveur démaré");
 
             while(true){
 
